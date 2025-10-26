@@ -52,7 +52,6 @@ You must manually set the base path to your dataset in all the Python scripts.
 1.  Open each `.py` script (e.g., `downsampling.py`, `feature_engineering.py`, etc.).
 2.  Find this line near the top of each file:
     ```python
-# --- Configuration ---
     base_data_dir = pathlib.Path(r"")
     ```
 3.  Change the empty string `r""` to the full, absolute path of your `r4.2` folder. **Use a raw string literal (r"...") to avoid issues with backslashes.**
