@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Step 1: Filtering and DownSampling Report</title>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            margin: 0 auto;
+            max-width: 800px;
+            padding: 20px;
+            background-color: #fff;
+            color: #333;
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #34495e;
+            margin-top: 30px;
+        }
+        h3 {
+            color: #7f8c8d;
+            margin-top: 20px;
+        }
+        p {
+            margin: 10px 0;
+        }
+        ul, ol {
+            margin: 10px 0;
+            padding-left: 30px;
+        }
+        li {
+            margin: 5px 0;
+        }
+        code {
+            background-color: #ecf0f1;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+        }
+        .equation {
+            margin: 15px 0;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>Step 1: Filtering and DownSampling Report</h1>
+
+    <h2>Overview</h2>
+    <p>This report outlines the filtering and downsampling process for the CERT Insider Threat r4.2 dataset (15.1 GB) for the "User Behavior Analytics for Insider Threat Detection" project. The goal is to reduce dataset size while preserving user behavior patterns using statistical sampling, focusing on session-based filtering, with an adjusted approach for <code>http.csv</code> to handle computational constraints (16 GB RAM, 4 cores).</p>
+
+    <h2>Dataset Context</h2>
+    <p>The CERT r4.2 dataset includes:</p>
+    <ul>
+        <li><strong>LDAP</strong>: 12,000 entries (1,000 users over 12 months).</li>
+        <li><strong>Logon.csv</strong>: 854,859 logon/logoff events.</li>
+        <li><strong>Email.csv</strong>: 2,629,979 email activities.</li>
+        <li><strong>File.csv</strong>: 445,581 file accesses.</li>
+        <li><strong>Http.csv</strong>: 28,434,423 web activities.</li>
+        <li><strong>Device.csv</strong>: 405,380 device events.</li>
+        <li><strong>Psychometric.csv</strong>: 1,000 user personality scores.</li>
+    </ul>
+
+    <h2>Methodology and Statistics</h2>
+
+    <h3>Step 1: Deduplicate LDAP Data</h3>
+    <ul>
+        <li><strong>Logic</strong>: Combine LDAP files, deduplicate by <code>user_id</code>, keeping the latest entry.</li>
+        <li><strong>Statistics</strong>:
+            <ul>
+                <li>Total entries: 12,000.</li>
+                <li>Unique users: 1,000.</li>
+                <li>Output: <code>filtered_ldap.csv</code> (1,000 rows).</li>
+            </ul>
+        </li>
+    </ul>
+
+    <h3>Step 2: Filter Psychometric Data</h3>
+    <ul>
+        <li><strong>Logic</strong>: Filter <code>psychometric.csv</code> to match LDAP users.</li>
+        <li><strong>Statistics</strong>:
+            <ul>
+                <li>Total entries: 1,000.</li>
+                <li>Filtered entries: 1,000.</li>
+                <li>Output: <code>filtered_psychometric.csv</code> (1,000 rows).</li>
+            </ul>
+        </li>
+    </ul>
+
+    <h3>Step 3: Create Logon-Logoff Sessions</h3>
+    <ul>
+        <li><strong>Logic</strong>: Filter <code>logon.csv</code> for LDAP users, pair logon-logoff events into sessions, assume unpaired logons end at 23:59:59, and remove invalid sessions.</li>
+        <li><strong>Statistics</strong>:
+            <ul>
+                <li>Total events: 854,859.</li>
+                <li>Sessions created: 470,591 (~50% logons paired).</li>
+                <li>Invalid sessions removed: ~1,000 (0.2% estimated).</li>
+                <li>Final sessions: 470,591.</li>
+            </ul>
+        </li>
+    </ul>
+
+    <h3>Step 4: Calculate Sample Size for Sessions</h3>
+    <ul>
+        <li><strong>Logic</strong>: Use the sample size formula for proportions:
+            <div class="equation">
+                \[ n = \frac{Z^2 \cdot p \cdot (1-p)}{E^2} \]
+            </div>
+            <ul>
+                <li>\( Z \): 1.96 (95% confidence).</li>
+                <li>\( p \): 0.5 (max variance).</li>
+                <li>\( E \): Margin of error.</li>
+            </ul>
+            Original target: \( E = 0.05 \):
+            <div class="equation">
+                \[ n = \frac{(1.96)^2 \cdot 0.5 \cdot (1-0.5)}{(0.05)^2} = \frac{3.8416 \cdot 0.25}{0.0025} \approx 385 \]
+            </div>
+            Adjusted to \( n = 6 \) (1 session per time bin, 6 bins) due to crashes:
+            <div class="equation">
+                \[ 6 = \frac{(1.96)^2 \cdot 0.5 \cdot (1-0.5)}{E^2} \implies E^2 = \frac{0.9604}{6} \approx 0.160067 \implies E \approx 0.400 \]
+            </div>
+        </li>
+        <li><strong>Statistics</strong>:
+            <ul>
+                <li>Original: 385 sessions/user (±5% margin of error).</li>
+                <li>Adjusted: 6 sessions/user (±40.0% margin of error).</li>
+                <li>Total ideal sample: \( 6 \times 1,000 = 6,000 \).</li>
+            </ul>
+        </li>
+    </ul>
+
+    <h3>Step 5: Sample Sessions with Stratification</h3>
+    <ul>
+        <li><strong>Logic</strong>: Sample 6 sessions per user (1 per time bin, 6 bins over 2009-12 to 2011-05, ~3 months each). If a user has fewer sessions or bins, use all available.</li>
+        <li><strong>Statistics</strong>:
+            <ul>
+                <li>Total sessions: 470,591.</li>
+                <li>Average sessions/user: \( \frac{470,591}{1,000} \approx 471 \).</li>
+                <li>Sampled sessions: 6,000 (all users had sessions in all bins).</li>
+                <li>Output: <code>filtered_logon_sessions.csv</code> (6,000 rows).</li>
+            </ul>
+        </li>
+    </ul>
+
+    <h3>Step 6: Filter Activity Files</h3>
+    <ul>
+        <li><strong>Logic</strong>:
+            <ul>
+                <li>For all files (<code>email.csv</code>, <code>file.csv</code>, <code>http.csv</code>, <code>device.csv</code>): Filter activities to those within the 6 sampled session time windows per user (stratified across 6 time bins).</li>
+            </ul>
+        </li>
+        <li><strong>Statistics</strong>:
+            <ul>
+                <li><strong>Email.csv</strong>:
+                    <ul>
+                        <li>Original rows: 2,629,979.</li>
+                        <li>Rows after user filtering: 2,629,979.</li>
+                        <li>Rows after session filtering: 40,626 (1.545% retention).</li>
+                        <li>Output: <code>filtered_email.csv</code>.</li>
+                    </ul>
+                </li>
+                <li><strong>File.csv</strong>:
+                    <ul>
+                        <li>Original rows: 445,581.</li>
+                        <li>Rows after user filtering: 445,581.</li>
+                        <li>Rows after session filtering: 6,167 (1.384% retention).</li>
+                        <li>Output: <code>filtered_file.csv</code>.</li>
+                    </ul>
+                </li>
+                <li><strong>Http.csv</strong>:
+                    <ul>
+                        <li>Original rows: 28,434,423.</li>
+                        <li>Rows after user filtering: 28,434,423.</li>
+                        <li>Rows after session filtering: 440,712 (1.550% retention).</li>
+                        <li>Output: <code>filtered_http.csv</code>.</li>
+                    </ul>
+                </li>
+                <li><strong>Device.csv</strong>:
+                    <ul>
+                        <li>Original rows: 405,380.</li>
+                        <li>Rows after user filtering: 405,380.</li>
+                        <li>Rows after session filtering: 5,577 (1.376% retention).</li>
+                        <li>Output: <code>filtered_device.csv</code>.</li>
+                    </ul>
+                </li>
+                <li><strong>Note on Processing</strong>:
+                    <ul>
+                        <li>Due to memory constraints (16 GB RAM), <code>http.csv</code> was processed in batches of 100 users to reduce memory usage, increasing runtime to ~62 minutes but preventing crashes.</li>
+                    </ul>
+                </li>
+            </ul>
+        </li>
+    </ul>
+
+    <h2>Statistical Justification</h2>
+    <ul>
+        <li><strong>Session Sampling</strong>:
+            <ul>
+                <li>Reduced sample size to 6 sessions/user increases margin of error to ±40.0%, reducing precision but enabling processing (runtime: ~1 hour vs. crashes at 385 sessions).</li>
+                <li>Stratification (1 session/bin, 6 bins) ensures temporal coverage, mitigating bias.</li>
+            </ul>
+        </li>
+    </ul>
+
+    <h2>Conclusion</h2>
+    <p>The filtering and downsampling process successfully reduced the CERT r4.2 dataset from 15.1 GB to a manageable size, retaining 493,082 activity rows (1.545% of the original 31,915,363 rows) across all activity files. This was achieved while maintaining temporal representativeness through stratified session sampling (6 sessions/user, ±40.0% margin of error). Batch processing for <code>http.csv</code> ensured the process completed within memory limits, demonstrating a practical balance between statistical rigor and computational efficiency. The resulting filtered datasets are ready for subsequent steps in the project, such as feature engineering or visualization, and showcase the application of statistical techniques to a real-world problem.</p>
+</body>
+</html>

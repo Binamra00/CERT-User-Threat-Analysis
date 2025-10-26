@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Step 2: Feature Engineering Report</title>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Slightly more modern font stack */
+            line-height: 1.7; /* Increased line height for better readability */
+            margin: 0 auto;
+            max-width: 850px; /* Slightly wider content area */
+            padding: 25px; /* Increased padding */
+            background-color: #fff;
+            color: #333; /* Darker text for contrast */
+        }
+        header {
+            border-bottom: 3px solid #3498db; /* More prominent separator */
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+        }
+        h1 {
+            color: #2c3e50; /* Darker heading color */
+            font-size: 2em; /* Slightly larger main heading */
+            margin: 0;
+        }
+        h2 {
+            color: #34495e; /* Slightly lighter heading color */
+            margin-top: 35px; /* More space above major sections */
+            margin-bottom: 15px;
+            border-bottom: 1px solid #bdc3c7; /* Subtle separator for h2 */
+            padding-bottom: 5px;
+        }
+        h3 {
+            color: #556f82; /* Distinct color for subheadings */
+            margin-top: 25px;
+            margin-bottom: 10px;
+        }
+        p {
+            margin: 15px 0; /* More space around paragraphs */
+        }
+        ul, ol {
+            margin: 15px 0;
+            padding-left: 30px;
+        }
+        li {
+            margin-bottom: 8px; /* Space between list items */
+        }
+        code {
+            background-color: #e0e6ea; /* Slightly different code background */
+            padding: 3px 6px; /* More padding for inline code */
+            border-radius: 4px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.95em;
+        }
+        .equation {
+            margin: 20px 0; /* More vertical space for equations */
+            text-align: center;
+            padding: 15px;
+            background-color: #ffffff; /* White background for equations */
+            border: 1px solid #dcdcdc;
+            border-radius: 5px;
+            overflow-x: auto; /* Add scroll for very wide equations */
+        }
+        .equation math {
+           display: block; /* Ensure MathJax block rendering for equations */
+        }
+
+        /* Optional: Style for the feature lists */
+        .feature-list h3 {
+            margin-bottom: 5px;
+        }
+        .feature-list ul ul {
+            margin-top: 5px;
+            margin-bottom: 5px;
+            padding-left: 20px;
+        }
+        .feature-list ul ul li {
+             margin-bottom: 4px;
+        }
+
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Step 2: Feature Engineering Report</h1>
+    </header>
+
+    <h2>Overview</h2>
+    <p>
+        This report details the feature engineering phase for the User Behavior Analytics (UBA) for Insider Threat Detection project. Following the initial filtering and downsampling of the large CERT r4.2 dataset (originally 15.1 GB), the objective was to transform the raw activity logs into a structured, user-level feature set. This process is crucial for enabling effective analysis and modeling for insider threat detection, while ensuring the resulting dataset is computationally manageable given the project's constraints (16 GB RAM, 4 cores). A key aspect of this step involved employing a statistical heuristic to guide the selection of a relevant number of features from each data source file, aiming to capture significant variance in user behavior.
+    </p>
+
+    <h2>Statistical Approach for Feature Selection</h2>
+    <p>
+        To create a rich yet manageable feature set, a systematic approach guided feature selection and aggregation. This methodology ensured that the extracted features were statistically relevant, provided comprehensive coverage of different aspects of user behavior, and were suitable for aggregation at the user level (for 1,000 users).
+    </p>
+    <ul>
+        <li><strong>Feature Categorization</strong>: Features were conceptually grouped into distinct categories (Temporal, Frequency, Access, User Profile, Behavioral Variance) to ensure a holistic representation of user activity.</li>
+        <li><strong>User-Level Aggregation</strong>: Data from various activity logs were aggregated to produce a single row of features per user, forming the basis for user-centric analysis.</li>
+        <li><strong>Variance-Based Feature Count Estimation</strong>: A heuristic method, inspired by the principles of Principal Component Analysis (PCA) and variance explanation, was used to estimate the appropriate number of features to extract from each source file.</li>
+    </ul>
+
+    <h3>Variance Target</h3>
+    <p>
+        To balance the need for detailed behavioral representation with computational efficiency, we set a target of capturing 80% of the estimated variance within each data source. In this context, 'variance' refers to the inherent variability and complexity observed in user activities recorded in the logs (e.g., the diversity in accessed URLs, fluctuations in logon times, differences in file access patterns). Capturing 80% of this variability is generally considered sufficient in data analysis to retain most of the informative signal while reducing noise and the risk of overfitting in subsequent modeling stages.
+    </p>
+
+    <h3>Heuristic Formula for Estimating Feature Count</h3>
+    <p>
+        The number of features, denoted as \( k \), estimated to capture the target variance from each file was determined using the following heuristic formula:
+    </p>
+    <div class="equation">
+        \[ k = \lceil \log_2(\text{Number of Rows}) \times \text{Variance Target} \rceil \]
+    </div>
+    <p>Where:</p>
+    <ul>
+        <li>\( \log_2(\text{Number of Rows}) \): This term serves as a proxy for the information content or complexity scale of the data within a file. A larger number of rows suggests a potentially wider range of behavioral instances to characterize.</li>
+        <li>\( \text{Variance Target} \): Set to 0.8 (representing 80%), this factor scales the complexity measure to align with the goal of capturing 80% of the variance.</li>
+        <li>\( \lceil \cdot \rceil \): The ceiling function ensures that the result is a whole number, representing the minimum integer number of features required.</li>
+    </ul>
+    <p>
+        This formula provides a data-driven estimate of the feature dimensionality needed from each source file to represent the majority of its behavioral variance, adjusted for the scale of the filtered data.
+    </p>
+
+    <h2>Calculation of Features per File</h2>
+    <p>
+        The heuristic formula was applied to the row count of each filtered dataset file. The row counts for the filtered files are as follows:
+    </p>
+    <ul>
+        <li><code>filtered_ldap.csv</code>: 1,000 rows</li>
+        <li><code>filtered_psychometric.csv</code>: 1,000 rows</li>
+        <li><code>filtered_logon_sessions.csv</code>: 6,000 rows</li>
+        <li><code>filtered_email.csv</code>: 40,626 rows</li>
+        <li><code>filtered_device.csv</code>: 5,577 rows</li>
+        <li><code>filtered_file.csv</code>: 6,167 rows</li>
+        <li><code>filtered_http.csv</code>: 440,712 rows</li>
+    </ul>
+    <p>Below are the calculations for each file and the resulting target number of features:</p>
+    <ul>
+        <li><strong>filtered_ldap.csv</strong> (1,000 rows):
+            <div class="equation">
+                \[ \log_2(1,000) \approx 9.97 \]
+                \[ k = \lceil 9.97 \times 0.8 \rceil = \lceil 7.98 \rceil = 8 \]
+            </div>
+            Target: 8 features.
+        </li>
+        <li><strong>filtered_psychometric.csv</strong> (1,000 rows):
+            <div class="equation">
+                \[ \log_2(1,000) \approx 9.97 \]
+                \[ k = \lceil 9.97 \times 0.8 \rceil = \lceil 7.98 \rceil = 8 \]
+            </div>
+            Target: 8 features.
+        </li>
+        <li><strong>filtered_logon_sessions.csv</strong> (6,000 rows):
+            <div class="equation">
+                \[ \log_2(6,000) \approx 12.55 \]
+                \[ k = \lceil 12.55 \times 0.8 \rceil = \lceil 10.04 \rceil = 11 \]
+            </div>
+            Target: 11 features.
+        </li>
+        <li><strong>filtered_email.csv</strong> (40,626 rows):
+            <div class="equation">
+                \[ \log_2(40,626) \approx 15.31 \]
+                \[ k = \lceil 15.31 \times 0.8 \rceil = \lceil 12.25 \rceil = 13 \]
+            </div>
+            Target: 13 features.
+        </li>
+        <li><strong>filtered_device.csv</strong> (5,577 rows):
+            <div class="equation">
+                \[ \log_2(5,577) \approx 12.44 \]
+                \[ k = \lceil 12.44 \times 0.8 \rceil = \lceil 9.95 \rceil = 10 \]
+            </div>
+            Target: 10 features.
+        </li>
+        <li><strong>filtered_file.csv</strong> (6,167 rows):
+            <div class="equation">
+                \[ \log_2(6,167) \approx 12.59 \]
+                \[ k = \lceil 12.59 \times 0.8 \rceil = \lceil 10.07 \rceil = 11 \]
+            </div>
+            Target: 11 features.
+        </li>
+        <li><strong>filtered_http.csv</strong> (440,712 rows):
+            <div class="equation">
+                \[ \log_2(440,712) \approx 18.75 \]
+                \[ k = \lceil 18.75 \times 0.8 \rceil = \lceil 15.00 \rceil = 15 \]
+            </div>
+            Target: 15 features.
+        </li>
+    </ul>
+    <p>
+        Summing the target features from each file results in a total of \( 8 + 8 + 11 + 13 + 10 + 11 + 15 = 76 \) features. This total dimensionality, aggregated across 1,000 users, produces a final feature set of 1,000 rows and 76 columns, which is well within the defined computational limits of 16 GB RAM and 4 cores.
+    </p>
+
+    <h2>Selected Features</h2>
+    <p>
+        Based on the calculated target numbers and guided by the feature categories (Temporal, Frequency, Access, User Profile, Behavioral Variance), specific features were engineered and aggregated at the user level. The selected features for each original data source file are listed below:
+    </p>
+    <div class="feature-list">
+        <h3>filtered_ldap.csv (8 Features)</h3>
+        <ul>
+            <li><strong>User Profile</strong>:
+                <ul>
+                    <li><code>is_manager</code>: Binary indicating if the user's role includes 'manager'.</li>
+                    <li><code>is_admin</code>: Binary indicating if the user's role includes 'admin'.</li>
+                    <li><code>department</code>: User’s associated department.</li>
+                    <li><code>role</code>: User’s specific role title.</li>
+                    <li><code>team_size</code>: Estimated or available size of the user’s team.</li>
+                    <li><code>tenure</code>: Estimated years the user has been with the organization.</li>
+                    <li><code>security_clearance_level</code>: User’s assigned security clearance level.</li>
+                </ul>
+            </li>
+            <li><strong>Access</strong>:
+                <ul>
+                    <li><code>has_external_access</code>: Binary indicating if the user has permissions for external system access.</li>
+                </ul>
+            </li>
+        </ul>
+
+        <h3>filtered_psychometric.csv (8 Features)</h3>
+        <ul>
+            <li><strong>User Profile</strong> (OCEAN Traits):
+                <ul>
+                    <li><code>openness</code>: Score on the Openness trait.</li>
+                    <li><code>conscientiousness</code>: Score on the Conscientiousness trait.</li>
+                    <li><code>extraversion</code>: Score on the Extraversion trait.</li>
+                    <li><code>agreeableness</code>: Score on the Agreeableness trait.</li>
+                    <li><code>neuroticism</code>: Score on the Neuroticism trait.</li>
+                </ul>
+            </li>
+            <li><strong>Derived/Composite</strong>:
+                <ul>
+                     <li><code>risk_score</code>: A composite score potentially indicating behavioral risk (e.g., derived from Neuroticism and Conscientiousness).</li>
+                </ul>
+            </li>
+            <li><strong>Interaction Features</strong>:
+                <ul>
+                    <li><code>neuroticism_external_access_interaction</code>: Interaction term combining neuroticism score and the user's external access behavior (e.g., mean external HTTP access count).</li>
+                    <li><code>conscientiousness_after_hours_interaction</code>: Interaction term combining conscientiousness score and the user's tendency for after-hours activity (e.g., ratio of after-hours logons).</li>
+                </ul>
+            </li>
+        </ul>
+
+        <h3>filtered_logon_sessions.csv (11 Features)</h3>
+        <ul>
+            <li><strong>Temporal</strong>:
+                <ul>
+                    <li><code>hour_of_day_mean</code>: Average hour of the day for user logon events.</li>
+                    <li><code>session_duration_mean</code>: Average duration of logon sessions in seconds.</li>
+                    <li><code>session_duration_max</code>: Maximum observed session duration.</li>
+                    <li><code>session_duration_min</code>: Minimum observed session duration.</li>
+                    <li><code>is_after_hours_ratio</code>: Proportion of logon sessions occurring outside standard business hours (9 AM–5 PM).</li>
+                    <li><code>weekend_login_ratio</code>: Proportion of logon sessions occurring on weekends.</li>
+                </ul>
+            </li>
+            <li><strong>Frequency</strong>:
+                <ul>
+                    <li><code>login_count</code>: Total number of logon sessions recorded for the user.</li>
+                    <li><code>session_frequency</code>: Average number of logon sessions per day over the observed period.</li>
+                </ul>
+            </li>
+            <li><strong>Behavioral Variance</strong>:
+                <ul>
+                    <li><code>login_hour_deviation_mean</code>: Average absolute deviation of logon hours from the user's mean login hour.</li>
+                    <li><code>session_duration_variance</code>: Variance in the duration of logon sessions.</li>
+                    <li><code>login_hour_variance</code>: Variance in the hour of the day for logon events.</li>
+                </ul>
+            </li>
+        </ul>
+
+        <h3>filtered_email.csv (13 Features)</h3>
+        <ul>
+            <li><strong>Temporal</strong>:
+                <ul>
+                    <li><code>email_hour_mean</code>: Average hour of the day for email activity.</li>
+                    <li><code>after_hours_email_ratio</code>: Proportion of emails sent after standard business hours.</li>
+                    <li><code>weekday_email_ratio</code>: Proportion of emails sent on weekdays.</li>
+                </ul>
+            </li>
+            <li><strong>Frequency</strong>:
+                <ul>
+                    <li><code>email_count</code>: Total number of emails sent by the user.</li>
+                    <li><code>email_frequency</code>: Average number of emails sent per day over the observed period.</li>
+                    <li><code>unique_recipients_mean</code>: Average number of unique recipients per email.</li>
+                    <li><code>email_unique_domains_mean</code>: Average number of unique external domains contacted per email.</li>
+                </ul>
+            </li>
+            <li><strong>Access/Content</strong>:
+                <ul>
+                    <li><code>has_large_attachment_ratio</code>: Proportion of emails sent with attachments exceeding a defined size threshold.</li>
+                    <li><code>attachment_size_mean</code>: Average size of attachments per email (if applicable).</li>
+                    <li><code>external_email_ratio</code>: Proportion of emails sent to external domains.</li>
+                    <li><code>external_email_count</code>: Total count of emails sent to external domains.</li>
+                    <li><code>content_keyword_ratio</code>: Proportion of emails containing predefined sensitive keywords in their content.</li> </ul>
+            </li>
+             <li><strong>Behavioral Variance</strong>:
+                <ul>
+                    <li><code>email_hour_variance</code>: Variance in the hour of email activity.</li>
+                    </ul>
+            </li>
+        </ul>
+        <h3>filtered_device.csv (10 Features)</h3>
+        <ul>
+            <li><strong>Temporal</strong>:
+                <ul>
+                    <li><code>device_hour_mean</code>: Average hour of the day for device connection/disconnection events.</li>
+                    <li><code>after_hours_device_ratio</code>: Proportion of device events occurring after standard business hours.</li>
+                </ul>
+            </li>
+            <li><strong>Frequency</strong>:
+                <ul>
+                    <li><code>device_event_count</code>: Total number of device connection/disconnection events.</li>
+                    <li><code>device_usage_frequency</code>: Average number of device events per day over the observed period.</li>
+                    <li><code>connect_disconnect_ratio</code>: Ratio of connect events to disconnect events.</li>
+                    <li><code>unique_pcs</code>: Number of distinct personal computers used by the user.</li>
+                    <li><code>unique_devices</code>: Number of distinct types of devices connected (e.g., USB, network drive).</li> </ul>
+            </li>
+            <li><strong>Access</strong>:
+                 <ul>
+                    <li><code>usb_connect_count</code>: Total count of USB device connection events.</li>
+                </ul>
+            </li>
+            <li><strong>Behavioral Variance</strong>:
+                <ul>
+                    <li><code>device_hour_variance</code>: Variance in the hour of device activity.</li>
+                </ul>
+            </li>
+        </ul>
+        <h3>filtered_file.csv (11 Features)</h3>
+        <ul>
+            <li><strong>Temporal</strong>:
+                <ul>
+                    <li><code>file_hour_mean</code>: Average hour of the day for file access events.</li>
+                    <li><code>after_hours_file_ratio</code>: Proportion of file access events occurring after standard business hours.</li>
+                </ul>
+            </li>
+            <li><strong>Frequency</strong>:
+                <ul>
+                    <li><code>file_access_count</code>: Total number of file access events.</li>
+                    <li><code>file_access_frequency</code>: Average number of file access events per day over the observed period.</li>
+                    <li><code>unique_filenames_mean</code>: Average number of unique files accessed per unit time or session.</li>
+                </ul>
+            </li>
+            <li><strong>Access/Content</strong>:
+                <ul>
+                    <li><code>sensitive_file_access_count</code>: Total count of access events to files containing predefined sensitive keywords.</li>
+                    <li><code>sensitive_file_ratio</code>: Proportion of file access events targeting files with sensitive keywords.</li>
+                    <li><code>external_drive_access_count</code>: Total count of file access events directed towards external or removable drives.</li>
+                    <li><code>file_type_diversity</code>: Index representing the diversity of file types accessed (e.g., Shannon entropy).</li>
+                </ul>
+            </li>
+            <li><strong>Behavioral Variance</strong>:
+                <ul>
+                    <li><code>file_hour_variance</code>: Variance in the hour of file access activity.</li>
+                     <li><code>file_access_frequency_variance</code>: Variance in file access frequency across the observed period.</li> </ul>
+            </li>
+        </ul>
+         <h3>filtered_http.csv (15 Features)</h3>
+        <ul>
+            <li><strong>Temporal</strong>:
+                <ul>
+                    <li><code>http_hour_mean</code>: Average hour of the day for HTTP access events.</li>
+                    <li><code>after_hours_http_ratio</code>: Proportion of HTTP access events occurring after standard business hours.</li>
+                    <li><code>weekday_http_ratio</code>: Proportion of HTTP access events occurring on weekdays.</li>
+                </ul>
+            </li>
+            <li><strong>Frequency</strong>:
+                <ul>
+                    <li><code>http_access_count</code>: Total number of HTTP access events.</li>
+                    <li><code>http_access_frequency</code>: Average number of HTTP access events per day over the observed period.</li>
+                    <li><code>unique_urls_count</code>: Total number of distinct URLs accessed by the user.</li> <li><code>http_unique_domains_count</code>: Total number of distinct external domains accessed via HTTP.</li> </ul>
+            </li>
+            <li><strong>Access/Content</strong>:
+                <ul>
+                    <li><code>external_access_count</code>: Total count of HTTP accesses to external websites.</li>
+                    <li><code>external_access_ratio</code>: Proportion of HTTP accesses directed towards external domains.</li>
+                    <li><code>risky_domain_count</code>: Total count of HTTP accesses to websites classified as potentially risky.</li>
+                    <li><code>content_keyword_count</code>: Total count of HTTP responses containing predefined sensitive keywords in their content.</li>
+                    <li><code>url_length_mean</code>: Average length of the URLs accessed.</li>
+                    <li><code>sensitive_data_upload_count</code>: Count of potential sensitive data uploads (heuristic based on URL/content).</li> </ul>
+            </li>
+             <li><strong>Behavioral Variance</strong>:
+                <ul>
+                    <li><code>http_hour_variance</code>: Variance in the hour of HTTP access activity.</li>
+                    <li><code>http_access_frequency_variance</code>: Variance in HTTP access frequency across the observed period.</li> </ul>
+            </li>
+        </ul>
+        </div>
+
+
+    <h2>Conclusion</h2>
+    <p>
+        This feature engineering step successfully transformed the filtered CERT r4.2 dataset into a user-level feature matrix. By employing a variance-based heuristic, we estimated and extracted a total of 76 features across seven data source files, aiming to capture approximately 80% of the behavioral variance within each source. The resulting dataset comprises 1,000 rows (one for each user) and 76 columns (representing the engineered features). These features span temporal, frequency, access, user profile, and behavioral variance categories, providing a comprehensive representation of user activities relevant for insider threat detection. This structured and dimensionally reduced dataset is now prepared for subsequent analysis, including feature validation, potential further selection, and the application of modeling techniques such as anomaly detection or clustering to identify users exhibiting potentially malicious behaviors.
+    </p>
+
+</body>
+</html>

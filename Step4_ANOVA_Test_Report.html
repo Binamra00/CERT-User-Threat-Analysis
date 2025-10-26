@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Step 4: Univariate ANOVA Test Report</title>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.7;
+            margin: 0 auto;
+            max-width: 850px;
+            padding: 25px;
+            background-color: #fff;
+            color: #333;
+        }
+        header {
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+        }
+        h1 {
+            color: #2c3e50;
+            font-size: 2em;
+            margin: 0;
+        }
+        h2 {
+            color: #34495e;
+            margin-top: 35px;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #bdc3c7;
+            padding-bottom: 5px;
+        }
+        h3 {
+            color: #556f82;
+            margin-top: 25px;
+            margin-bottom: 10px;
+        }
+        p {
+            margin: 15px 0;
+        }
+        ul, ol {
+            margin: 15px 0;
+            padding-left: 30px;
+        }
+        li {
+            margin-bottom: 8px;
+        }
+        code {
+            background-color: #e0e6ea;
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.95em;
+        }
+        .equation {
+            margin: 20px 0;
+            text-align: center;
+            padding: 15px;
+            background-color: #ffffff;
+            border: 1px solid #dcdcdc;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+         .equation math {
+           display: block;
+        }
+        table {
+            border-collapse: collapse;
+            margin: 20px 0;
+            width: 100%;
+            text-align: left;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+        }
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Step 4: Univariate ANOVA Test Report</h1>
+    </header>
+
+    <h2>Introduction</h2>
+    <p>
+        Following the K-Means clustering of user behavior features, this report details the application of the Univariate Analysis of Variance (ANOVA) test. The purpose of this statistical analysis is to determine which individual features exhibit statistically significant differences in their means across the identified user clusters. Features demonstrating such significant differences are considered impactful in distinguishing one cluster from another based on their average characteristic value.
+    </p>
+
+    <h2>What is Univariate ANOVA?</h2>
+    <p>
+        Univariate ANOVA is a parametric statistical test used to compare the means of a single continuous dependent variable across two or more independent, categorical groups.
+    </p>
+    <p>
+        The test evaluates the null hypothesis (\( H_0 \)) against the alternative hypothesis (\( H_1 \)):
+    </p>
+    <ul>
+        <li>\( H_0 \): The means of the dependent variable are equal across all groups (\( \mu_1 = \mu_2 = \dots = \mu_k \), where \( k \) is the number of groups).</li>
+        <li>\( H_1 \): At least one group mean is different from the others.</li>
+    </ul>
+    <p>
+        ANOVA works by partitioning the total variance observed in the dependent variable into variance *between* the groups and variance *within* the groups. If the variance between groups is significantly larger than the variance within groups, it suggests that the group membership (i.e., the cluster) has a real effect on the mean of the dependent variable (i.e., the feature value).
+    </p>
+
+    <h2>ANOVA in the Context of User Clusters</h2>
+    <p>
+        In this analysis, we applied a separate univariate ANOVA test for each engineered user feature.
+    </p>
+    <ul>
+        <li>The **dependent variable** for each test is one of the continuous user features (e.g., <code>file_access_count</code>, <code>session_duration_mean</code>, <code>is_admin</code>).</li>
+        <li>The **independent variable** (grouping variable) is the user's assigned **K-Means cluster label**.</li>
+    </ul>
+    <p>
+        For each feature, the ANOVA test assesses whether the mean value of that feature is significantly different across the 4 clusters identified by K-Means.
+    </p>
+
+    <h2>The F-Statistic and P-value</h2>
+    <p>
+        The core of the ANOVA test is the calculation of the F-statistic and its associated p-value.
+    </p>
+    <h3>The F-Statistic</h3>
+    <p>
+        The F-statistic is a ratio comparing the variance explained by the group differences (Between-Group Variance or Mean Square Between) to the variance not explained by the group differences (Within-Group Variance or Mean Square Within).
+    </p>
+    <div class="equation">
+        \[ F = \frac{\text{Mean Square Between (MSB)}}{\text{Mean Square Within (MSW)}} \]
+    </div>
+    <p>
+        Where:
+    </p>
+    <ul>
+        <li>\( \text{MSB} = \frac{\text{Sum of Squares Between (SSB)}}{\text{Degrees of Freedom Between (df}_1)} \)</li>
+        <li>\( \text{MSW} = \frac{\text{Sum of Squares Within (SSW)}}{\text{Degrees of Freedom Within (df}_2)} \)</li>
+    </ul>
+    <p>
+        In this context, SSB measures the variability of the cluster means around the overall grand mean of the feature, and SSW measures the variability of individual user feature values around their respective cluster means. The degrees of freedom are \( \text{df}_1 = k-1 \) (number of clusters minus 1) and \( \text{df}_2 = N-k \) (total number of observations minus the number of clusters).
+    </p>
+    <p>
+        A larger F-statistic indicates that the variability between the cluster means is large relative to the variability within the clusters, suggesting that the clusters are indeed separated based on that feature's mean.
+    </p>
+
+    <h3>The P-value</h3>
+    <p>
+        The p-value is calculated from the F-statistic and the degrees of freedom. It represents the probability of obtaining an F-statistic as large as, or larger than, the one observed, *assuming the null hypothesis is true* (i.e., assuming there is no real difference in means between the clusters for that feature).
+    </p>
+    <p>
+        The p-value is the key to determining statistical significance.
+    </p>
+
+    <h2>Statistical Significance and Impactful Features</h2>
+    <p>
+        To determine if a feature is "impactful" in distinguishing clusters based on ANOVA, we compare its p-value to a predetermined significance level, denoted by \( \alpha \). A common choice for \( \alpha \) is 0.05 (or 5%).
+    </p>
+    <ul>
+        <li>If the **p-value \( < \alpha \)** (e.g., p &lt; 0.05), we **reject the null hypothesis**. This means there is statistically significant evidence that the means of the feature are different across the clusters. These features are considered **Significant** differentiators.</li>
+        <li>If the **p-value \( \geq \alpha \)** (e.g., p &ge; 0.05), we **fail to reject the null hypothesis**. This means the observed differences in means could reasonably occur by random chance, and there is no statistically significant evidence that the feature's means differ across the clusters. These features are considered **Less Significant** differentiators (in terms of mean difference).</li>
+    </ul>
+    <p>
+        The features with the lowest p-values indicate the strongest statistical evidence against the null hypothesis, meaning the clusters differ most substantially on the mean of those particular features. These are prime candidates for "high-impacting" features from this ANOVA perspective.
+    </p>
+
+    <h2>ANOVA Results</h2>
+    <p>
+        The univariate ANOVA test was performed for each of the engineered features using the <code>statsmodels</code> library in Python. The results, including the calculated F-value and p-value for the cluster effect for each feature, have been saved to the file <code>univariate_anova_results.csv</code>.
+    </p>
+    <p>
+        This CSV file includes the following columns:
+    </p>
+    <ul>
+        <li><code>Feature</code>: The name of the engineered feature tested.</li>
+        <li><code>P_value</code>: The calculated p-value from the ANOVA test for the cluster effect.</li>
+        <li><code>F_value</code>: The calculated F-statistic from the ANOVA test for the cluster effect.</li>
+        <li><code>Significance_Level</code>: An interpretation based on \( \alpha = 0.05 \). 'Significant' if P_value &lt; 0.05, 'Less Significant' otherwise, and 'Skipped/Error' if the test could not be performed.</li>
+        <li><code>Error</code>: Details if an error occurred during the test for that feature.</li>
+    </ul>
+    <p>
+        By examining the <code>univariate_anova_results.csv</code> file, particularly sorting by the 'P_value' column in ascending order, one can identify the features with the most statistically significant differences across the clusters. Features marked as 'Significant' with very small p-values are the ones where the clusters' average behaviors are most distinct.
+    </p>
+
+    <h2>Conclusion</h2>
+    <p>
+        The univariate ANOVA test provides a powerful statistical tool to assess the discriminatory power of individual features between defined groups (user clusters). Features with a statistically significant cluster effect (low p-value) indicate that the cluster membership is associated with a meaningful difference in the mean value of that feature. These results are crucial for understanding the characteristics that define each cluster and for selecting features that are most impactful for tasks like cluster interpretation or building predictive models to classify users into these groups or identify outliers exhibiting similar characteristics.
+    </p>
+
+</body>
+</html>

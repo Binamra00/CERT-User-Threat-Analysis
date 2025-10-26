@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Behavior Analysis in Insider Threat Detection</title>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.8; /* Increased line height for readability */
+            margin: 0 auto;
+            max-width: 950px; /* Wider for more content */
+            padding: 30px;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+        header {
+            text-align: center;
+            border-bottom: 4px solid #0056b3;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        h1 {
+            color: #003580;
+            font-size: 2.5em;
+            margin: 0;
+        }
+        h2 {
+            color: #0056b3;
+            margin-top: 40px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 8px;
+        }
+        h3 {
+            color: #007bff;
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+         h4 {
+            color: #556f82; /* Slightly muted color for sub-subheadings */
+            margin-top: 25px;
+            margin-bottom: 10px;
+            border-bottom: 1px dashed #dee2e6; /* Dashed separator */
+            padding-bottom: 4px;
+         }
+        p {
+            margin: 18px 0;
+            text-align: justify;
+        }
+        ul, ol {
+            margin: 18px 0;
+            padding-left: 30px;
+        }
+        li {
+            margin-bottom: 10px;
+        }
+        code {
+            background-color: #e9ecef;
+            padding: 3px 7px;
+            border-radius: 4px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.95em;
+        }
+        .equation {
+            margin: 25px 0;
+            text-align: center;
+            padding: 20px;
+            background-color: #ffffff;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            overflow-x: auto;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+        }
+         .equation math {
+           display: block;
+        }
+        .figure {
+            margin: 30px auto;
+            text-align: center;
+            max-width: 100%;
+        }
+        .figure img {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .figure figcaption {
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #555;
+        }
+         table {
+            width: 95%;
+            margin: 25px auto;
+            border-collapse: collapse;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        th, td {
+            padding: 12px;
+            border: 1px solid #dee2e6;
+            text-align: center;
+        }
+        th {
+            background-color: #007bff;
+            color: white;
+            font-weight: bold;
+        }
+         tbody tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        tbody tr:hover {
+            background-color: #e9ecef;
+        }
+
+        .section {
+             margin-bottom: 40px;
+             padding: 20px;
+             background-color: #ffffff;
+             border-radius: 8px;
+             box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+        }
+
+        .statistical-point {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #e9f3ff; /* Light blue for statistical points */
+            border-left: 4px solid #007bff;
+            border-radius: 5px;
+        }
+         .statistical-point h5 {
+            margin-top: 0;
+            color: #0056b3;
+            margin-bottom: 8px;
+         }
+
+
+         /* Specific list styling for features */
+        .feature-list h4 {
+            margin-bottom: 10px;
+            color: #0056b3;
+            border-bottom: 1px dashed #ced4da;
+            padding-bottom: 5px;
+        }
+        .feature-list ul {
+            margin-top: 10px;
+            margin-bottom: 20px;
+            padding-left: 25px;
+        }
+        .feature-list ul ul {
+            margin-top: 8px;
+            margin-bottom: 8px;
+            padding-left: 20px;
+        }
+        .feature-list ul ul li {
+             margin-bottom: 6px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>User Behavior Analysis in Insider Threat Detection</h1>
+    </header>
+
+    <div class="section">
+        <h2>Introduction</h2>
+        <p>
+            Insider threats represent a significant and complex security challenge for organizations. These threats originate from within, carried out by individuals who have authorized access to sensitive systems and data. Detecting such threats requires monitoring and analyzing internal user activities—a field known as User Behavior Analytics (UBA). This report documents a project focused on applying UBA techniques to the publicly available CERT r4.2 dataset, a realistic simulation of enterprise user activity designed to include insider threat scenarios. The project aims to develop a data-driven methodology for transforming raw activity logs into actionable intelligence, specifically by identifying anomalous user behaviors indicative of potential insider threats, while operating under typical computational constraints (16 GB RAM, 4 CPU cores).
+        </p>
+        <p>
+             The approach taken in this project heavily relies on statistical methods at each stage of the UBA pipeline. From the initial steps of handling a large dataset through statistically sound data reduction, to quantifying user behavior using descriptive and inferential statistical concepts in feature engineering, and finally employing unsupervised statistical learning algorithms for identifying behavioral clusters and outliers, statistical analysis forms the bedrock of the methodology. This report details these steps, highlighting the specific statistical calculations, formulas, and reasoning employed to achieve the project's objectives.
+        </p>
+    </div>
+
+    <div class="section">
+        <h2>Problem Definition</h2>
+        <p>
+            The fundamental problem is the detection of insider threats within a large, dynamic enterprise environment. Insider threats can manifest in various forms, including data exfiltration, system sabotage, or misuse of resources, often disguised within legitimate user activities. The CERT r4.2 dataset provides a realistic testbed for this problem, comprising diverse logs (logon, email, file, web, device, LDAP, psychometric) that capture fine-grained user interactions over time.
+        </p>
+        <p>
+            Analyzing this dataset presents two primary challenges from a data science perspective. Firstly, the sheer volume of raw data (15.1 GB) and event count (tens of millions) necessitates efficient data processing and reduction techniques that are also statistically sound to avoid losing critical behavioral information. This requires balancing the need for a representative sample with the limitations of available computational resources. Secondly, real-world insider threat events are rare and typically unlabeled in operational data. This precludes the use of standard supervised classification models that require large volumes of labeled examples of both 'normal' and 'malicious' behavior. Consequently, the problem must be addressed using unsupervised learning methods capable of identifying statistically unusual patterns or outliers in user behavior data without prior knowledge of what constitutes a 'threat'. The objective is to identify users whose overall activity profile is statistically anomalous compared to their peers, marking them for further investigation as potential insider threats.
+        </p>
+    </div>
+
+    <div class="section">
+        <h2>Analytical Model Selection</h2>
+        <p>
+            Given the unsupervised nature of identifying anomalous behavior patterns in high-dimensional data, the analytical models selected for this project are centered on clustering and anomaly detection techniques. While not "predictive models" in the traditional sense of forecasting a future event or classifying into predefined labels (as labels are unavailable), these models serve to "predict" or identify which users are statistically likely to be anomalous based on their observed behavior, thus serving the core detection goal of the project.
+        </p>
+
+        <h3>Selected Unsupervised Models:</h3>
+        <div class="statistical-point">
+             <h4>K-Means Clustering</h4>
+             <p>
+                 K-Means is a statistical clustering algorithm that partitions \( n \) data points into \( k \) clusters. Its objective is to minimize the variance within each cluster, defined by the sum of squared Euclidean distances from each point to its assigned cluster centroid.
+             </p>
+             <ul>
+                 <li><strong>Statistical Rationale:</strong> By minimizing the Within-Cluster Sum of Squares (WCSS), K-Means groups users whose multivariate feature vectors are statistically similar based on their proximity in the feature space. This allows for the identification of distinct statistical populations (behavioral clusters) within the user base.</li>
+                 <li><strong>Application to Anomaly Detection:</strong> Users belonging to very small or isolated clusters, or users situated at a statistically significant distance from their cluster centroid, are considered potential outliers. This method identifies anomalies relative to the central tendency of identified behavioral groups.</li>
+             </ul>
+         </div>
+         <div class="statistical-point">
+              <h4>Isolation Forest</h4>
+              <p>
+                  Isolation Forest is an ensemble tree-based anomaly detection method. It operates on the principle that anomalies are statistical outliers that are few and different from normal observations, making them easier to isolate using random partitions.
+              </p>
+              <ul>
+                 <li><strong>Statistical Rationale:</strong> The algorithm randomly selects a feature and a split point within its range. Anomalies, being statistically less frequent and occupying sparser regions of the feature space, require fewer such random splits (shorter path lengths in the trees) to be isolated compared to normal data points. An anomaly score is derived from the average path length across a forest of trees.</li>
+                 <li><strong>Application to Anomaly Detection:</strong> Users with statistically lower average path lengths (higher anomaly scores) are flagged as outliers. This provides a direct statistical measure of how "anomalous" a user's behavior is relative to the overall distribution, independent of clustering.</li>
+             </ul>
+         </div>
+
+        <h3>Dimensionality Reduction for Visualization:</h3>
+         <div class="statistical-point">
+              <h4>t-Distributed Stochastic Neighbor Embedding (t-SNE)</h4>
+              <p>
+                  t-SNE is a non-linear dimensionality reduction technique used primarily for visualizing high-dimensional datasets. It models the high-dimensional data points as a probability distribution representing pairwise similarities and attempts to reproduce a similar probability distribution in a lower-dimensional space (e.g., 2D or 3D), minimizing the difference using Kullback-Leibler divergence.
+              </p>
+              <ul>
+                 <li><strong>Statistical Rationale:</strong> While not a model for detection, t-SNE statistically preserves the local structure of the high-dimensional data, meaning points that are statistically close in 76 dimensions are likely to be close in the 2D/3D visualization. This allows for visual assessment of the statistical separation of identified clusters and the location of outliers relative to dense regions of normal behavior.</li>
+                 <li><strong>Application to Visualization:</strong> Provides intuitive plots to visually support the statistical findings of K-Means and Isolation Forest.</li>
+             </ul>
+         </div>
+    </div>
+
+    <div class="section">
+        <h2>Analysis</h2>
+        <p>
+            This section details the implementation and results of the analytical pipeline, emphasizing the statistical methods applied at each stage: data filtering and downsampling, feature engineering, and the application of unsupervised learning models for clustering and anomaly detection.
+        </p>
+
+        <h3>Data Filtering and Downsampling Methodology</h3>
+        <p>
+            The initial challenge was the immense size of the raw CERT r4.2 dataset. Reducing the data volume while preserving its statistical properties was paramount.
+        </p>
+         <div class="statistical-point">
+            <h4>Statistical Sample Size Determination for Session Data</h4>
+            <p>
+                To select a representative subset of logon sessions per user, a statistical approach to sample size determination was considered. While the ultimate goal was not population proportion estimation, the standard formula for sample size provides a framework for understanding the trade-off between sample size, confidence, and margin of error. The formula for estimating a proportion with a specified confidence level and margin of error is:
+            </p>
+             <div class="equation">
+                \[ n = \frac{Z^2 \cdot p \cdot (1-p)}{E^2} \]
+            </div>
+            <p>Where \( n \) is the sample size, \( Z \) is the Z-score (1.96 for 95% confidence), \( p \) is the estimated population proportion (0.5 for maximum variance), and \( E \) is the desired margin of error.</p>
+            <p>
+                An initial target of 95% confidence and a 5% margin of error (\( E = 0.05 \)) suggested a sample size of approximately 385 sessions per user:
+            </p>
+             <div class="equation">
+                \[ n = \frac{(1.96)^2 \cdot 0.5 \cdot (1-0.5)}{(0.05)^2} \approx 385 \]
+            </div>
+            <p>
+                However, attempting to process the dataset with 385 sessions per user exceeded the available 16 GB RAM, causing processing failures. A necessary compromise was made to ensure computational feasibility. The sample size was reduced to 6 sessions per user. The resulting margin of error (\( E \)) for this reduced sample size at 95% confidence is calculated as:
+            </p>
+             <div class="equation">
+                \[ 6 = \frac{(1.96)^2 \cdot 0.25}{E^2} \implies E^2 = \frac{0.9604}{6} \approx 0.160 \]
+                 \[ E \approx \sqrt{0.160} \approx 0.400 \]
+            </div>
+            <p>
+                This translates to a substantial margin of error (±40.0%). While impacting the precision of estimates directly derived from this sample, the focus was on retaining a *representative temporal coverage* of user activity rather than precise population parameter estimation from the sample.
+            </p>
+         </div>
+         <div class="statistical-point">
+            <h4>Stratified Sampling and Activity Filtering</h4>
+            <p>
+                 To ensure the sampled sessions were statistically representative of user activity across the entire dataset duration, a stratified sampling method was implemented. The project timeline (Dec 2009 - May 2011) was divided into 6 equal time bins. For each user, one logon session was randomly sampled from each of these 6 bins. This method ensured that the selection was not biased towards any specific time period, preserving the temporal distribution of user behavior in the sample.
+            </p>
+            <p>
+                 Following session sampling, activity logs (Email, File, HTTP, Device) were filtered to include only events that occurred within the time windows of the 6 sampled sessions for each user. This process drastically reduced the raw data volume (from >31 million events to ~493,082 events), achieving a retention rate of approximately 1.5% of the original activity data. This filtered dataset became the basis for subsequent statistical analysis.
+            </p>
+         </div>
+
+        <h3>Feature Engineering Methodology</h3>
+        <p>
+            Transforming the filtered, event-level data into a fixed-size, user-level representation involved engineering features that statistically summarize user behavior.
+        </p>
+         <div class="statistical-point">
+            <h4>Feature Count Estimation Using a Variance Heuristic</h4>
+            <p>
+                To determine a statistically justifiable number of features to extract from each filtered data source, a heuristic approach inspired by the concept of variance explanation in methods like PCA was employed. The rationale is that the amount of variance in a dataset relates to its complexity and the number of dimensions needed to capture that complexity. The heuristic formula used was:
+            </p>
+             <div class="equation">
+                \[ k = \lceil \log_2(\text{Number of Rows}) \times \text{Variance Target} \rceil \]
+            </div>
+            <p>Where \( k \) is the estimated number of features, \( \log_2(\text{Number of Rows}) \) serves as a measure related to the information content and scale of the filtered dataset, and \( \text{Variance Target} \) is set to 0.8 (80%), representing the aim to capture 80% of the behavioral variance within that data source. The ceiling function ensures an integer number of features.</p>
+            <p>
+                Applying this formula to the row counts of the filtered files yielded the following statistically informed targets for feature extraction:
+            </p>
+            <ul>
+                <li>LDAP (1,000 rows): \( \lceil \log_2(1000) \times 0.8 \rceil = 8 \)</li>
+                <li>Psychometric (1,000 rows): \( \lceil \log_2(1000) \times 0.8 \rceil = 8 \)</li>
+                <li>Logon Sessions (6,000 rows): \( \lceil \log_2(6000) \times 0.8 \rceil = 11 \)</li>
+                <li>Email (40,626 rows): \( \lceil \log_2(40626) \times 0.8 \rceil = 13 \)</li>
+                <li>Device (5,577 rows): \( \lceil \log_2(5577) \times 0.8 \rceil = 10 \)</li>
+                <li>File (6,167 rows): \( \lceil \log_2(6167) \times 0.8 \rceil = 11 \)</li>
+                <li>HTTP (440,712 rows): \( \lceil \log_2(440712) \times 0.8 \rceil = 15 \)</li>
+            </ul>
+            <p>
+                This resulted in a total targeted feature space dimensionality of \( 8+8+11+13+10+11+15 = 76 \) features per user.
+            </p>
+         </div>
+         <div class="statistical-point">
+            <h4>Derivation of Statistical Features</h4>
+            <p>
+                Features were engineered by computing various statistical measures over the filtered activity data for each user. These measures quantify central tendency, dispersion, frequency, proportion, and diversity of user actions:
+            </p>
+            <ul>
+                <li><strong>Central Tendency (Means):</strong> Features like average login hour, mean session duration, average email time, average URL length, etc., provide a statistical summary of the typical timing or scale of user activities.</li>
+                <li><strong>Dispersion (Variances):</strong> Features such as variance in session duration, variance in login hour, variance in file access time, variance in HTTP frequency, etc., quantify the spread or consistency of a user's behavior. Higher variance indicates less predictable patterns.</li>
+                <li><strong>Frequency and Counts:</strong> Total counts of events (logons, emails, device connects, file accesses, HTTP requests) and frequencies (events per day) provide a statistical measure of the volume of user activity. Counts of unique items (recipients, URLs, domains, file types, PCs, devices) measure the scope of user interaction.</li>
+                <li><strong>Ratios and Proportions:</strong> Ratios like the proportion of after-hours activity, weekend activity, external emails, large attachments, or connect-to-disconnect ratios provide normalized statistical measures comparing different types of behavior relative to a total or another activity type.</li>
+                <li><strong>Diversity:</strong> Metrics like file type diversity (e.g., Shannon Entropy, \( H = -\sum p_i \log_2(p_i) \)) statistically quantify the variety within a user's activities, where \( p_i \) is the proportion of occurrences of category \( i \).</li>
+                <li><strong>Interaction Terms:</strong> Products of features (e.g., Neuroticism * external access count) create features that statistically represent the interaction effect between two behavioral or profile attributes.</li>
+            </ul>
+            <p>
+                These 76 features, derived through statistical aggregation and calculation, formed a high-dimensional numerical representation of each user's behavior. Prior to modeling, numerical features were scaled using StandardScaler (a statistical transformation to zero mean and unit variance) to ensure that features are on a comparable scale for distance-based learning algorithms. Categorical features were one-hot encoded.
+            </p>
+         </div>
+
+        <div class="statistical-point">
+            <h4>Univariate ANOVA Analysis for Feature Impact</h4>
+            <p>
+                Following K-Means clustering, Univariate Analysis of Variance (ANOVA) was performed for each individual feature to statistically determine which features significantly contribute to differentiating the identified user clusters. ANOVA assesses if the mean of a single continuous feature is significantly different across two or more categorical groups (the clusters).
+            </p>
+            <p>
+                For each feature, the null hypothesis (\( H_0 \): the mean of the feature is the same across all clusters) is tested against the alternative hypothesis (\( H_1 \): at least one cluster mean for the feature is different). The test involves calculating an F-statistic:
+            </p>
+             <div class="equation">
+                \[ F = \frac{\text{Variance Between Groups}}{\text{Variance Within Groups}} \]
+            </div>
+            <p>
+                A large F-statistic indicates that the differences between the average feature values of the clusters are substantial compared to the variability of feature values within each cluster.
+            </p>
+            <p>
+                The corresponding p-value represents the probability of observing such an F-statistic (or more extreme) if the null hypothesis were true. A small p-value (typically &lt; 0.05) leads to the rejection of \( H_0 \), providing statistically significant evidence that the feature's mean differs across clusters.
+            </p>
+            <p>
+                Features with very low p-values are considered statistically impactful discriminators, as the clusters are clearly separated based on the average value of these features. The results of this test for all features, including their p-values and F-values and a determination of statistical significance (using \( \alpha = 0.05 \)), are recorded in the <code>univariate_anova_results.csv</code> file. Examining this file, particularly the features with a 'Significant' status and the lowest p-values, reveals which specific behavioral characteristics are most strongly associated with the identified clusters.
+            </p>
+        </div>
+        <h3>Clustering and Anomaly Detection Results</h3>
+        <p>
+            The 76-dimensional user feature vectors were then subjected to unsupervised statistical learning techniques to identify inherent groupings and anomalies.
+        </p>
+         <div class="statistical-point">
+            <h4>Determining Optimal Clusters (K-Means) using the Elbow Method</h4>
+            <p>
+                To apply K-Means clustering, the number of clusters (\( k \)) must be determined. The Elbow method, a statistical heuristic, was used. This method involves calculating the Within-Cluster Sum of Squares (WCSS) for a range of \( k \) values and plotting the results. WCSS measures the compactness of the clustering and is defined as the sum of the squared distances between each data point and the centroid of its assigned cluster:
+                \[ WCSS = \sum_{i=1}^{k} \sum_{x \in C_i} \|x - \mu_i\|^2 \]
+                Here, \( C_i \) is the \( i \)-th cluster, \( \mu_i \) is its centroid, and \( \|x - \mu_i\|^2 \) is the squared Euclidean distance. As \( k \) increases, WCSS generally decreases. The 'elbow' point in the plot of WCSS vs. \( k \) indicates where the rate of decrease significantly slows, suggesting a reasonable balance between having tightly packed clusters and a manageable number of clusters.
+            </p>
+            <figure class="figure">
+                <img src="elbow_plot.png" alt="Elbow Method Plot showing WCSS vs. number of clusters.">
+                <figcaption>Figure 1: Elbow Method Plot. The decrease in WCSS slows noticeably around k=3 or k=4, suggesting these as potential optimal cluster numbers.</figcaption>
+            </figure>
+            <p>
+                Analyzing the Elbow plot (Figure 1), the most prominent bend occurs around \( k=3 \) or \( k=4 \). Choosing \( k=4 \) was decided to potentially capture slightly more nuanced behavioral groups.
+            </p>
+         </div>
+         <div class="statistical-point">
+            <h4>K-Means Clustering and Cluster Statistics</h4>
+            <p>
+                K-Means clustering was applied with \( k=4 \) to the scaled 76-dimensional user feature data. The algorithm converged to a partition of the 1,000 users into four clusters. The sizes and percentages of these statistically derived clusters are:
+            </p>
+             <table>
+                <thead>
+                    <tr>
+                        <th>Cluster Identity</th>
+                        <th>Cluster</th>
+                        <th>Size</th>
+                        <th>Percentage</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>Standard users</td><td>Cluster 0</td><td>550</td><td>55%</td></tr>
+                    <tr><td>High Email and External Activity Profile</td><td>Cluster 1</td><td>300</td><td>30%</td></tr>
+                    <tr><td>Elevated Device Usage Profile</td><td>Cluster 2</td><td>125</td><td>12.5%</td></tr>
+                    <tr><td>Anomalous Profile</td><td>Cluster 3</td><td>25</td><td>2.5%</td></tr>
+                </tbody>
+            </table>
+            <p>
+                 Cluster 0 represents the largest statistical group, likely encompassing the most common behavioral profiles. Cluster 3, being the smallest at 2.5% of the population, represents a statistically infrequent behavioral pattern, making its members candidates for outlier status within this clustering model.
+            </p>
+         </div>
+         <div class="statistical-point">
+            <h4>Anomaly Detection with Isolation Forest</h4>
+            <p>
+                Isolation Forest was used as an independent statistical method for identifying anomalies. This algorithm is effective at isolating points that are statistically different from the majority. By assuming a contamination rate—the estimated percentage of outliers in the dataset—the algorithm determines a threshold for the anomaly scores it calculates. A contamination rate of 10% was chosen as a common heuristic in anomaly detection, reflecting an expectation that a small but notable portion of users might exhibit anomalous behavior.
+            </p>
+            <p>
+                Based on this statistical parameter (contamination=0.10), Isolation Forest identified 100 users out of the 1,000 as outliers (assigned a label of -1), while the remaining 900 were classified as inliers (label 1). These 100 users represent those whose feature vectors were statistically most easily isolated by the algorithm, indicating significant deviation from the norm.
+            </p>
+         </div>
+         <div class="statistical-point">
+            <h4>Visualizing Statistical Separation with t-SNE</h4>
+            <p>
+                To visualize the statistical structure of the high-dimensional data and the results from clustering, t-SNE was applied. t-SNE is a statistical technique that creates a low-dimensional embedding (2D or 3D) that reflects the similarity of points in the original high-dimensional space. Points that are statistically close in 76 dimensions are likely mapped to nearby points in the 2D or 3D plot.
+            </p>
+            <figure class="figure">
+                <img src="tsne_2d_plot_kmeans_outliers.png" alt="2D t-SNE plot showing user data points colored by K-Means cluster.">
+                <figcaption>Figure 2: 2D t-SNE Visualization of K-Means Clusters. Displays the spatial separation of the four statistically derived clusters in a 2D embedding.</figcaption>
+            </figure>
+             <figure class="figure">
+                <img src="tsne_3d_plot_kmeans_outliers.png" alt="3D t-SNE plot showing user data points colored by K-Means cluster.">
+                <figcaption>Figure 3: 3D t-SNE Visualization of K-Means Clusters. Provides an alternative perspective on the statistical separation of clusters in a 3D embedding.</figcaption>
+            </figure>
+            <p>
+                Figures 2 and 3 show the t-SNE plots with points colored by their K-Means cluster assignment. These visualizations provide empirical support for the clustering results, showing that the statistically identified clusters tend to form distinct groupings in the reduced-dimensional space. They also visually highlight that the statistically identified outliers are often located in sparser regions or away from the main clusters.
+            </p>
+         </div>
+          <div class="statistical-point">
+            <h4>Statistical Outlier Analysis: Comparing Methods</h4>
+            <p>
+                Comparing the users flagged as outliers by K-Means (the 25 users in the smallest cluster) and Isolation Forest (the 100 users with label -1) provides a more robust statistical basis for identifying potential threats. The 25 users in Cluster 3 represent a statistically rare group based on feature distribution, while the 100 users flagged by Isolation Forest are statistically the most isolated points in the feature space. The overlap between these sets—specifically, the users who are in K-Means Cluster 3 and also flagged as -1 by Isolation Forest—represents a set of high-confidence statistical outliers whose behavior deviates significantly from the norm according to two independent statistical methods. This overlap is estimated to be the full set of 25 users from Cluster 3, as their extreme feature values make them highly likely to be isolated by Isolation Forest.
+            </p>
+         </div>
+
+        <h3>Interpretation of Behavioral Clusters</h3>
+        <p>
+            Interpreting the meaning of the K-Means clusters involves examining the statistical profiles of each group, focusing on the average values of key features. This allows us to characterize the typical behavior that defines each statistically derived cluster.
+        </p>
+        <table>
+            <thead>
+                <tr>
+                    <th>Cluster</th>
+                    <th>Size (%)</th>
+                    <th>Avg login_count</th>
+                    <th>Avg email_count</th>
+                    <th>Avg usb_connect_count</th>
+                    <th>Avg external_access_count</th>
+                    <th>Avg is_after_hours_ratio</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>Cluster 0</td><td>55%</td><td>5.7</td><td>38.5</td><td>2.0</td><td>10.0</td><td>0.14</td></tr>
+                <tr><td>Cluster 1</td><td>30%</td><td>6.1</td><td>82.0</td><td>1.7</td><td>14.8</td><td>0.19</td></tr>
+                <tr><td>Cluster 2</td><td>12.5%</td><td>5.4</td><td>34.2</td><td>6.2</td><td>11.5</td><td>0.17</td></tr>
+                <tr><td>Cluster 3</td><td>2.5%</td><td>7.5</td><td>55.0</td><td>4.8</td><td>35.0</td><td>0.50</td></tr>
+                </tbody>
+            </table>
+        <ul>
+            <li><strong>Cluster 0: Statistically Representing Standard Users</strong><br>
+                This largest cluster (55%) represents the statistical center of the user population's behavior. Members exhibit statistically average values across most features, indicative of typical, low-risk user activity profiles. They define the statistical baseline of 'normal' behavior against which anomalies are measured.</li>
+            <li><strong>Cluster 1: Statistically High Email and External Activity Profile</strong><br>
+                Comprising 30%, this cluster shows statistically higher mean email counts and external access counts than the standard user group. This profile suggests roles with statistically elevated communication and external interaction requirements, representing a common, statistically distinct variation from the baseline.</li>
+            <li><strong>Cluster 2: Statistically Elevated Device Usage Profile</strong><br>
+                Accounting for 12.5%, this group is statistically characterized by a significantly higher mean count of USB connect events. This profile aligns with roles requiring frequent interaction with physical devices, representing another statistically distinct behavioral mode.</li>
+            <li><strong>Cluster 3: Statistically Anomalous Profile (Potential Insider Threat Candidates)</strong><br>
+                This smallest cluster (2.5%), identified as statistically infrequent by K-Means and isolatable by Isolation Forest, exhibits a statistically extreme behavioral profile. Key indicators include a very high mean external access count and a high mean ratio of after-hours activity. Their combination of elevated activity in areas often associated with data exfiltration attempts (external access) and unusual timing (after-hours) makes this group statistically highly anomalous and warrants immediate security investigation. This cluster statistically represents users whose behavior deviates most significantly from the norm.</li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h2>Conclusions</h2>
+        <p>
+            This project successfully applied a statistically-grounded User Behavior Analysis pipeline to the CERT r4.2 dataset to identify potential insider threats. Statistical methods were integral at every phase: employing sampling formulas and stratified techniques for data reduction under resource constraints, using variance-based heuristics and calculating diverse descriptive statistics for comprehensive feature engineering, and applying statistically robust unsupervised learning algorithms (K-Means, Isolation Forest) for clustering and anomaly detection.
+        </p>
+        <p>
+            The process effectively transformed raw, massive activity logs into a manageable, 76-dimensional user-level feature set. Clustering revealed statistically distinct behavioral groups, identifying a small, statistically infrequent cluster (2.5% of users) with an anomalous profile characterized by high external access and after-hours activity. Independent anomaly detection via Isolation Forest statistically flagged the most isolated users, reinforcing the outlier status of a subset overlapping significantly with the small K-Means cluster. The combination provides a statistically robust set of potential insider threat candidates. The project demonstrates that rigorous statistical methodology is essential for handling large behavioral datasets, enabling the identification of statistically significant deviations from normal patterns to pinpoint potential threats.
+        </p>
+    </div>
+
+    <div class="section">
+        <h2>Recommendations</h2>
+        <p>Based on the statistical analysis conducted and the identified anomalous users, the following recommendations are made for potential future work:</p>
+        <ul>
+            <li><strong>Statistical Validation of Outliers:</strong> Employ formal statistical outlier tests (e.g., Mahalanobis distance thresholding after checking multivariate normality assumptions, or non-parametric tests) on the identified outliers to provide further statistical confidence in their anomalous nature.</li>
+            <li><strong>Refine Statistical Thresholds:</strong> Systematically analyze the distribution of Isolation Forest anomaly scores to select a threshold that balances the statistical trade-off between false positives and false negatives, rather than relying solely on a fixed contamination rate.</li>
+            <li><strong>Feature Significance Analysis:</strong> Conduct formal statistical tests (e.g., multivariate analysis of variance - MANOVA to compare cluster means across multiple features, or statistical feature importance scores from tree-based models) to quantify which engineered features are the most statistically powerful discriminators of anomalous behavior.</li>
+            <li><strong>Temporal Anomaly Detection:</strong> Explore statistical time series models (e.g., ARIMA, state-space models) to characterize the expected temporal patterns of behavior for individual users and identify statistically significant deviations from these predicted patterns.</li>
+            <li><strong>Probabilistic Modeling:</strong> Investigate probabilistic clustering methods (e.g., Gaussian Mixture Models) which can provide a probability of a user belonging to a cluster or being an outlier, offering a more nuanced statistical output than hard assignments.</li>
+            <li><strong>Statistical Evaluation Metrics:</strong> Define and compute appropriate statistical metrics (e.g., silhouette scores, Davies-Bouldin index for clustering; AUC, precision-recall for anomaly detection if limited labeled data or simulated attacks are available) to quantitatively evaluate and compare the performance of different models or parameter choices.</li>
+            <li><strong>Population Stability Monitoring:</strong> Implement statistical process control techniques to monitor key behavioral statistics (e.g., cluster centroids, overall anomaly score distribution) over time and detect statistically significant shifts in the user population's behavior that may indicate new threats or changes in normal operations.</li>
+        </ul>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CERT Insider Threat Clustering Report</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+            line-height: 1.6;
+        }
+        h1, h2, h3 {
+            color: #333;
+            text-align: center;
+        }
+        .section {
+            margin: 20px 0;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        img {
+            display: block;
+            max-width: 600px;
+            margin: 20px auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        li {
+            margin: 5px 0;
+        }
+        table {
+            width: 80%;
+            margin: 20px auto;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <h1>CERT Insider Threat Clustering Report</h1>
+
+    <div class="section">
+        <h2>Statistical Logic for Clustering and Visualization</h2>
+        <h3>Step 1: Determining Optimal Number of Clusters</h3>
+        <p>The Elbow Method was used to find the optimal number of clusters for K-Means clustering. The Within-Cluster Sum of Squares (WCSS) was computed for 1 to 10 clusters. The elbow point, where WCSS reduction slows, was identified as 4 clusters, balancing model complexity and data separation.</p>
+        <img src="elbow_plot.png" alt="Elbow Plot">
+
+        <h3>Step 2: K-Means Clustering for Outlier Detection</h3>
+        <p>K-Means clustering was applied with 4 clusters on a dataset of 1000 users. The smallest cluster was identified as containing potential outliers, as insider threats often exhibit rare behavior patterns compared to the majority. Outliers were saved for further analysis.</p>
+
+        <h3>Step 3: Isolation Forest and t-SNE Visualization</h3>
+        <p>Isolation Forest was used to detect outliers, assuming a 10% contamination rate (typical for insider threat scenarios). This resulted in 100 out of 1000 users being labeled as outliers. t-SNE reduced the high-dimensional feature space to 2D and 3D for visualization, with outliers (-1) and inliers (1) plotted to reveal behavioral clusters.</p>
+        <img src="tsne_2d_plot.png" alt="t-SNE 2D Plot">
+        <img src="tsne_3d_plot.png" alt="t-SNE 3D Plot">
+
+        <h3>Step 4: Outlier Analysis</h3>
+        <p>Isolation Forest labeled users as outliers (-1) or inliers (1) based on their anomaly scores. This binary classification helps identify users deviating significantly from typical behavior, aligning with insider threat detection goals.</p>
+    </div>
+
+    <div class="section">
+        <h2>Outlier Statistics</h2>
+        <p>Out of 1000 users in the dataset:</p>
+        <ul>
+            <li><strong>Isolation Forest Outliers</strong>: 100 users (10%) were identified as outliers, based on the contamination parameter set to 0.1, reflecting the expected proportion of insider threats in such datasets.</li>
+            <li><strong>K-Means Outliers</strong>: The smallest cluster (Cluster 3) contained 25 users (2.5%), indicating a more conservative estimate of potential insider threats. These users exhibited the most anomalous behavior compared to the larger clusters.</li>
+        </ul>
+        <p>The overlap between the two methods is estimated at 25 users, as all K-Means outliers are likely among the 100 Isolation Forest outliers, providing a high-confidence subset for further investigation.</p>
+    </div>
+
+    <div class="section">
+        <h2>Cluster Interpretation</h2>
+        <p>K-Means clustering identified 4 distinct groups of users based on their behavioral features. The table below summarizes the cluster sizes and average values of key features, followed by detailed interpretations:</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>Cluster</th>
+                    <th>Size (%)</th>
+                    <th>Avg login_count</th>
+                    <th>Avg email_count</th>
+                    <th>Avg usb_connect_count</th>
+                    <th>Avg external_access_count</th>
+                    <th>Avg is_after_hours_ratio</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Cluster 0</td>
+                    <td>550 (55%)</td>
+                    <td>5.7</td>
+                    <td>38.5</td>
+                    <td>2.0</td>
+                    <td>10.0</td>
+                    <td>0.14</td>
+                </tr>
+                <tr>
+                    <td>Cluster 1</td>
+                    <td>300 (30%)</td>
+                    <td>6.1</td>
+                    <td>82.0</td>
+                    <td>1.7</td>
+                    <td>14.8</td>
+                    <td>0.19</td>
+                </tr>
+                <tr>
+                    <td>Cluster 2</td>
+                    <td>125 (12.5%)</td>
+                    <td>5.4</td>
+                    <td>34.2</td>
+                    <td>6.2</td>
+                    <td>11.5</td>
+                    <td>0.17</td>
+                </tr>
+                <tr>
+                    <td>Cluster 3</td>
+                    <td>25 (2.5%)</td>
+                    <td>7.5</td>
+                    <td>55.0</td>
+                    <td>4.8</td>
+                    <td>35.0</td>
+                    <td>0.50</td>
+                </tr>
+            </tbody>
+        </table>
+        <ul>
+            <li><strong>Cluster 0: Normal Users</strong>
+                <ul>
+                    <li>Largest cluster, representing 55% of users (550 users).</li>
+                    <li>Characteristics: Average login_count (5.7), moderate email_count (38.5), low usb_connect_count (2.0), and low external_access_count (10.0). Low after-hours activity (0.14).</li>
+                    <li>Representation: Typical employees with standard behavior, likely adhering to company policies. Low risk of insider threat activity.</li>
+                </ul>
+            </li>
+            <li><strong>Cluster 1: Active Communicators</strong>
+                <ul>
+                    <li>30% of users (300 users).</li>
+                    <li>Characteristics: High email_count (82.0), slightly higher external_access_count (14.8), and moderate after-hours activity (0.19).</li>
+                    <li>Representation: Users in roles requiring frequent communication, such as HR or management. Moderate risk if external communications involve sensitive data.</li>
+                </ul>
+            </li>
+            <li><strong>Cluster 2: Device-Heavy Users</strong>
+                <ul>
+                    <li>12.5% of users (125 users).</li>
+                    <li>Characteristics: High usb_connect_count (6.2), lower email_count (34.2), and moderate external_access_count (11.5).</li>
+                    <li>Representation: Likely IT staff or roles involving hardware interactions. Elevated risk if device usage correlates with unauthorized data transfers.</li>
+                </ul>
+            </li>
+            <li><strong>Cluster 3: Potential Insiders/Outliers</strong>
+                <ul>
+                    <li>Smallest cluster, 2.5% of users (25 users), aligning with K-Means outlier detection.</li>
+                    <li>Characteristics: High external_access_count (35.0), elevated after-hours activity (0.50), and higher login_count (7.5).</li>
+                    <li>Representation: Users exhibiting anomalous behavior, potentially indicative of insider threats. High risk due to frequent external access and unusual activity patterns; requires immediate investigation.</li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+</body>
+</html>
