@@ -1,6 +1,6 @@
-==============================
-PROJECT: CERT User Threat Analysis
-==============================
+
+**PROJECT: CERT User Threat Analysis**
+
 
 ## 1. Project Overview
 
