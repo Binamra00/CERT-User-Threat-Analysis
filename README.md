@@ -34,6 +34,7 @@ You can install them using pip:
 ### Data Download
 1.  Download the **CERT Insider Threat r4.2 dataset**. This dataset is publicly available on platforms like Kaggle.
 2.  Unzip the dataset into a local directory. Your directory structure should look something like this:
+```
 /path/to/your/dataset/r4.2/
 |-- email.csv
 |-- http.csv
@@ -45,7 +46,7 @@ You can install them using pip:
 |   |-- 2009-12.csv
 |   |-- 2010-01.csv
 |   |-- ...etc
-
+```
 ### **IMPORTANT: Path Configuration**
 You must manually set the base path to your dataset in all the Python scripts.
 
